@@ -1,8 +1,9 @@
 import { cors } from "hono/cors";
+import config from "../config";
 
 export const corsMiddleware = () =>
   cors({
-    origin: "http://localhost:3001",
-    allowMethods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
+    origin: config.cors.origin,
+    allowMethods: config.cors.allowMethods,
+    credentials: config.cors.credentials,
   });

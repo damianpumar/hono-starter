@@ -23,7 +23,7 @@ routes.post("/sign-in", async (c) => {
         Date.now() + 1000 * 60 * 60 * 24 * config.auth.cookie.expirationDays
       ),
       sameSite: "None",
-      domain: "localhost",
+      domain: config.auth.cookie.domain,
       secure: true,
     }
   );
