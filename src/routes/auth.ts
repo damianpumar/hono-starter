@@ -1,32 +1,39 @@
 import { Hono } from "hono";
 import { deleteCookie, setSignedCookie } from "hono/cookie";
+import { jwt, sign } from "hono/jwt";
 import { authMiddleware } from "../middlewares";
+import config from "../config";
 
 const routes = new Hono<HonoVariables>();
 const name = "auth";
 
 routes.post("/sign-in", async (c) => {
-  //TODO: implement sign-in
-
   const user = {
     id: 1,
   };
 
   await setSignedCookie(
     c,
-    c.get("cookiesKey"),
+    config.auth.cookie.key,
     btoa(JSON.stringify(user)),
-    c.get("cookiesSecret"),
+    config.auth.secret,
     {
       httpOnly: true,
-      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
+      expires: new Date(
+        Date.now() + 1000 * 60 * 60 * 24 * config.auth.cookie.expirationDays
+      ),
       sameSite: "None",
       domain: "localhost",
       secure: true,
     }
   );
 
-  return c.json({ message: "Sign-in successful" });
+  const token = await sign(user, config.auth.secret, "HS512");
+
+  return c.json({
+    token,
+    message: "Sign-in successful",
+  });
 });
 
 routes.get("/me", authMiddleware(), (c) => {
@@ -36,7 +43,7 @@ routes.get("/me", authMiddleware(), (c) => {
 });
 
 routes.post("/sign-out", (c) => {
-  deleteCookie(c, c.get("cookiesKey"));
+  deleteCookie(c, config.auth.cookie.key);
 
   return c.json({ message: "Sign-out successful" });
 });

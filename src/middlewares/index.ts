@@ -1,3 +1,2 @@
-export * from './auth';
-export * from './config';
-export * from './cors';
+export * from "./auth";
+export * from "./cors";

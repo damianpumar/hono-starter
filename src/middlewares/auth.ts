@@ -1,21 +1,33 @@
 import { Context, Next } from "hono";
 import { getSignedCookie } from "hono/cookie";
+import { verify } from "hono/jwt";
+import config from "../config";
 
 export const authMiddleware =
   () => async (c: Context<HonoVariables>, next: Next) => {
-    const sessionId = await getSignedCookie(
+    const cookie = await getSignedCookie(
       c,
-      c.get("cookiesSecret"),
-      c.get("cookiesKey")
+      config.auth.secret,
+      config.auth.cookie.key
     );
 
-    if (!sessionId) {
-      c.set("user", null);
+    if (cookie) {
+      c.set("user", JSON.parse(atob(cookie)));
 
-      return c.json({ error: "Not authorized" }, 401);
+      return next();
     }
 
-    c.set("user", JSON.parse(atob(sessionId)));
+    const auth = c.req.header("Authorization")?.split(" ")[1];
 
-    return next();
+    if (auth) {
+      try {
+        const user = await verify(auth, config.auth.secret, "HS512");
+
+        c.set("user", user);
+
+        return next();
+      } catch {}
+    }
+
+    return c.json({ error: "Not authorized" }, 401);
   };

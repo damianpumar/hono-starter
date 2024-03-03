@@ -35,11 +35,18 @@
           const user = ref(null);
 
           const login = async () => {
-            await axiosInstance.post("/auth/sign-in");
+            const { data } = await axiosInstance.post("/auth/sign-in");
+
+            localStorage.setItem("token", data.token);
           };
 
           const getUser = async () => {
-            const { data } = await axiosInstance.get("/auth/me");
+            const { data } = await axiosInstance.get("/auth/me", {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+            });
 
             user.value = data;
           };

@@ -4,14 +4,14 @@ import { Hono } from "hono";
 import { showRoutes } from "hono/dev";
 import { compress } from "hono/compress";
 
-import { configMiddleware, corsMiddleware } from "./middlewares";
+import { corsMiddleware } from "./middlewares";
 import { routes } from "./routes";
 
 import config from "./config";
 
 const app = new Hono<HonoVariables>();
 
-app.use(compress(), corsMiddleware(), configMiddleware());
+app.use(compress(), corsMiddleware());
 
 app.route("/", routes);
 
