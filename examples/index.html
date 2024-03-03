@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <div id="app">
+      <button @click="login">Login</button>
+
+      <button @click="getUser">Get User</button>
+
+      <button @click="signOut">Sign Out</button>
+
+      <p v-text="JSON.stringify(user)"></p>
+    </div>
+
+    <script>
+      const { createApp, ref } = Vue;
+
+      const axiosInstance = axios.create({
+        baseURL: "http://localhost:3000",
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      createApp({
+        setup() {
+          const user = ref(null);
+
+          const login = async () => {
+            await axiosInstance.post("/auth/sign-in");
+          };
+
+          const getUser = async () => {
+            const { data } = await axiosInstance.get("/auth/me");
+
+            user.value = data;
+          };
+
+          const signOut = async () => {
+            await axiosInstance.post("/auth/sign-out");
+          };
+
+          return {
+            user,
+            login,
+            getUser,
+            signOut,
+          };
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>

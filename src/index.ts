@@ -1,16 +1,18 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 
-import { authors, books } from "./routes";
+import { configMiddleware, corsMiddleware } from "./middlewares";
+import { routes } from "./routes";
 
-const app = new Hono();
+const app = new Hono<HonoVariables>();
 
-app.route("/authors", authors);
-app.route("/books", books);
+app.use("*", corsMiddleware(), configMiddleware());
+
+app.route("/", routes);
 
 const port = 3000;
 
-console.log(`Server is running on port ${port}`);
+console.log(`🛳️ Server is running on port: ${port}`);
 
 serve({
   fetch: app.fetch,

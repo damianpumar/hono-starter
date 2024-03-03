@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 
-const authors = new Hono();
+const routes = new Hono<HonoVariables>();
+const name = "authors";
 
-authors.get("/", (c) => c.json("list authors"));
-authors.post("/", (c) => c.json("create an author", 201));
-authors.get("/:id", (c) => c.json(`get ${c.req.param("id")}`));
+routes.get("/", (c) => c.json("list authors"));
+routes.post("/", (c) => c.json("create an author", 201));
+routes.get("/:id", (c) => c.json(`get ${c.req.param("id")}`));
 
-export { authors };
+export { routes, name };

@@ -2,7 +2,8 @@ import { Hono } from "hono";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 
-const books = new Hono();
+const routes = new Hono<HonoVariables>();
+const name = "books";
 
 const bookCreationScheme = z.object({
   title: z.string(),
@@ -11,12 +12,12 @@ const bookCreationScheme = z.object({
   price: z.number(),
 });
 
-books.get("/", (c) => c.json("list books"));
+routes.get("/", (c) => c.json("list books"));
 
-books.post("/", zValidator("json", bookCreationScheme), (c) =>
+routes.post("/", zValidator("json", bookCreationScheme), (c) =>
   c.json("create a book", 201)
 );
 
-books.get("/:id", (c) => c.json(`get ${c.req.param("id")}`));
+routes.get("/:id", (c) => c.json(`get ${c.req.param("id")}`));
 
-export { books };
+export { routes, name };
