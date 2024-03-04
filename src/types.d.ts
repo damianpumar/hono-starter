@@ -1,5 +1,5 @@
 interface HonoVariables {
   Variables: {
-    user: string | null;
+    user: { id: string };
   };
 }
