@@ -16,11 +16,14 @@
 
       <button @click="signOut">Sign Out</button>
 
+      <button @click="changeStrategy">{{strategy}}</button>
+
       <p v-text="JSON.stringify(user)"></p>
     </div>
 
     <script>
       const { createApp, ref } = Vue;
+      const strategy = ref("cookie");
 
       const axiosInstance = axios.create({
         baseURL: "http://localhost:3000",
@@ -38,7 +41,7 @@
             const { data } = await axiosInstance.post("/auth/sign-in", {
               email: "",
               password: "",
-              strategy: "cookie",
+              strategy: strategy.value,
             });
 
             if (data.token) localStorage.setItem("token", data.token);
@@ -65,11 +68,17 @@
             user.value = null;
           };
 
+          const changeStrategy = () => {
+            strategy.value = strategy.value === "cookie" ? "bearer" : "cookie";
+          };
+
           return {
             user,
             login,
             getUser,
             signOut,
+            changeStrategy,
+            strategy,
           };
         },
       }).mount("#app");
