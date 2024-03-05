@@ -1,14 +1,10 @@
 import { Context, Next } from "hono";
 import { getSignedCookie } from "hono/cookie";
 import { verify } from "hono/jwt";
-import config from "../config";
+import { env } from "@/config";
 
 const getUserLoggedIn = async (c: Context<HonoVariables>) => {
-  const cookie = await getSignedCookie(
-    c,
-    config.auth.secret,
-    config.auth.cookie.key
-  );
+  const cookie = await getSignedCookie(c, env.AUTH_SECRET, env.COOKIE_KEY);
 
   if (cookie) return JSON.parse(atob(cookie));
 
@@ -17,7 +13,7 @@ const getUserLoggedIn = async (c: Context<HonoVariables>) => {
   if (auth) {
     try {
       const [, token] = auth.split(" ");
-      return await verify(token, config.auth.secret, "HS512");
+      return await verify(token, env.AUTH_SECRET, "HS512");
     } catch {}
   }
 

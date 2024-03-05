@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { deleteCookie, setSignedCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
 import { authMiddleware } from "../middlewares";
-import config from "../config";
+import { env } from "@/config";
 
 type SignInBody = {
   email: string;
@@ -21,7 +21,7 @@ routes.post("/sign-in", async (c) => {
   };
 
   if (strategy === "bearer") {
-    const token = await sign(user, config.auth.secret, "HS512");
+    const token = await sign(user, env.AUTH_SECRET, "HS512");
 
     return c.json({
       token,
@@ -33,16 +33,16 @@ routes.post("/sign-in", async (c) => {
   if (strategy === "cookie") {
     await setSignedCookie(
       c,
-      config.auth.cookie.key,
+      env.COOKIE_KEY,
       btoa(JSON.stringify(user)),
-      config.auth.secret,
+      env.AUTH_SECRET,
       {
         httpOnly: true,
         expires: new Date(
-          Date.now() + 1000 * 60 * 60 * 24 * config.auth.cookie.expirationDays
+          Date.now() + 1000 * 60 * 60 * 24 * env.COOKIE_EXPIRES
         ),
         sameSite: "None",
-        domain: config.auth.cookie.domain,
+        domain: env.COOKIE_DOMAIN,
         secure: true,
       }
     );
@@ -63,7 +63,7 @@ routes.get("/me", authMiddleware(), (c) => {
 });
 
 routes.post("/sign-out", (c) => {
-  deleteCookie(c, config.auth.cookie.key);
+  deleteCookie(c, env.COOKIE_KEY);
 
   return c.json({ message: "Sign-out successful" });
 });
