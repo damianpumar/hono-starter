@@ -14,8 +14,12 @@ const cors = {
 };
 
 const isProd = process.env.NODE_ENV === "production";
+const server = {
+  port: Number(process.env.PORT ?? 3000),
+};
 
 const config = {
+  server,
   auth,
   cors,
   isProd,

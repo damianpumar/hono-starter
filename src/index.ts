@@ -6,16 +6,15 @@ import { compress } from "hono/compress";
 
 import { corsMiddleware } from "./middlewares";
 import { routes } from "./routes";
-
 import config from "./config";
+
+const { port } = config.server;
 
 const app = new Hono<HonoVariables>();
 
 app.use(compress(), corsMiddleware());
 
 app.route("/", routes);
-
-const port = 3000;
 
 console.log(`🛳️  Server is running on port: ${port}`);
 
