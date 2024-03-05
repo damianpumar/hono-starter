@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { deleteCookie, setSignedCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
 import { authMiddleware } from "../middlewares";
-import { env } from "@/config";
+import { env } from "../config";
 
 type SignInBody = {
   email: string;

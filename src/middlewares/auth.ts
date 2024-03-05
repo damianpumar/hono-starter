@@ -1,7 +1,7 @@
 import { Context, Next } from "hono";
 import { getSignedCookie } from "hono/cookie";
 import { verify } from "hono/jwt";
-import { env } from "@/config";
+import { env } from "../config";
 
 const getUserLoggedIn = async (c: Context<HonoVariables>) => {
   const cookie = await getSignedCookie(c, env.AUTH_SECRET, env.COOKIE_KEY);

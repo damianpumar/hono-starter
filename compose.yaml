@@ -4,5 +4,16 @@ services:
       context: .
     environment:
       NODE_ENV: production
+      BASE_URL: /
+      PORT: 3000
+      AUTH_SECRET: secret
+      COOKIE_DOMAIN: localhost
+      COOKIE_KEY: SESSION_COOKIE
+      COOKIE_EXPIRES: 7
+      CORS_ORIGIN: http://localhost:3001
+      CORS_METHODS: GET,POST,PUT,PATCH,DELETE
+      CORS_CREDENTIALS: true
+      SUPABASE_URL: https://<your_supabase_url>.supabase.co
+      SUPABASE_SERVICE_ROLE: <your_supabase_key>
     ports:
       - 3000:3000
