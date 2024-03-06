@@ -1,6 +1,6 @@
 import { Context, Hono } from "hono";
 import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";
-import { authMiddleware } from "../middlewares";
+import { privateRoute } from "../middlewares";
 import { env } from "../config";
 import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
@@ -91,7 +91,7 @@ routes.post("/sign-up", zValidator("json", userSignUpScheme), async (c) => {
   });
 });
 
-routes.get("/me", authMiddleware(), (c) => {
+routes.get("/me", privateRoute(), (c) => {
   const user = c.get("user");
 
   return c.json({ user });
@@ -125,7 +125,7 @@ routes.get("/refresh", async (c) => {
   return c.newResponse(null, 200);
 });
 
-routes.post("/sign-out", authMiddleware(), async (c) => {
+routes.post("/sign-out", privateRoute(), async (c) => {
   await supabase.auth.signOut();
 
   deleteCookie(c, `${env.COOKIE_KEY}_ACCESS_TOKEN`);

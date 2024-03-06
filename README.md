@@ -1,14 +1,48 @@
+# Hono + Supabase
+
+## Install server dependencies
+
+```bash
+npm run install
+--
+make dev/install
 ```
-npm install
+
+## Run server
+
+```bash
 npm run dev
+--
+make dev/run
 ```
 
-```
-open http://localhost:3000
+## Start database
+
+More info:
+
+- https://supabase.com/docs/guides/api/rest/generating-types
+- https://supabase.com/docs/guides/cli/local-development?access-method=kong#why-develop-locally
+
+```bash
+make db/start
 ```
 
-## Deploy
+## Deploy on docker
 
+### Build image
+
+```bash
+make dev/build
 ```
-docker compose up
+
+### Run container
+
+```bash
+make docker/up
+```
+
+### Stop container
+
+```bash
+make docker/down
 ```

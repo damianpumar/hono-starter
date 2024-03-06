@@ -2,7 +2,13 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "db/status": "supabase status",
+    "db/start": "supabase start",
+    "db/stop": "supabase stop",
+    "db/migrate": "supabase db reset",
+    "db/migrate/new": "supabase migration new $1",
+    "db/generate/types": "supabase gen types typescript --local > src/database/supabase.types.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.8.2",
@@ -14,6 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
+    "supabase": "^1.148.6",
     "tsx": "^3.12.2",
     "typescript": "^5.3.3"
   }

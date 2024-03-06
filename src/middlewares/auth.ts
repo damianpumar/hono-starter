@@ -3,7 +3,7 @@ import { supabase } from "../database";
 import { getSignedCookie } from "hono/cookie";
 import { env } from "../config";
 
-export const authMiddleware =
+export const privateRoute =
   () => async (c: Context<HonoVariables>, next: Next) => {
     const cookie = await getSignedCookie(
       c,
