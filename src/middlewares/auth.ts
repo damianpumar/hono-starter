@@ -1,33 +1,26 @@
 import { Context, Next } from "hono";
+import { supabase } from "../database";
 import { getSignedCookie } from "hono/cookie";
-import { verify } from "hono/jwt";
 import { env } from "../config";
-
-const getUserLoggedIn = async (c: Context<HonoVariables>) => {
-  const cookie = await getSignedCookie(c, env.AUTH_SECRET, env.COOKIE_KEY);
-
-  if (cookie) return JSON.parse(atob(cookie));
-
-  const auth = c.req.header("Authorization");
-
-  if (auth) {
-    try {
-      const [, token] = auth.split(" ");
-      return await verify(token, env.AUTH_SECRET, "HS512");
-    } catch {}
-  }
-
-  return null;
-};
 
 export const authMiddleware =
   () => async (c: Context<HonoVariables>, next: Next) => {
-    const user = await getUserLoggedIn(c);
+    const cookie = await getSignedCookie(
+      c,
+      env.AUTH_SECRET,
+      `${env.COOKIE_KEY}_ACCESS_TOKEN`
+    );
 
-    if (user) {
-      c.set("user", user);
+    if (cookie) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser(cookie.toString());
 
-      return next();
+      if (user) {
+        c.set("user", user);
+
+        return next();
+      }
     }
 
     return c.json({ error: "Not authorized" }, 401);

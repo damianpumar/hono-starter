@@ -1,59 +1,94 @@
-import { Hono } from "hono";
-import { deleteCookie, setSignedCookie } from "hono/cookie";
-import { sign } from "hono/jwt";
+import { Context, Hono } from "hono";
+import { deleteCookie, getSignedCookie, setSignedCookie } from "hono/cookie";
 import { authMiddleware } from "../middlewares";
 import { env } from "../config";
+import { z } from "zod";
+import { zValidator } from "@hono/zod-validator";
+import { supabase } from "../database";
+import { HTTPException } from "hono/http-exception";
+import { Session } from "@supabase/supabase-js";
 
-type SignInBody = {
-  email: string;
-  password: string;
-  strategy: "cookie" | "bearer";
-};
+const userSignInScheme = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
+
+const userSignUpScheme = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
 
 const routes = new Hono<HonoVariables>();
 const name = "auth";
 
-routes.post("/sign-in", async (c) => {
-  const { email, password, strategy } = await c.req.json<SignInBody>();
+const setSessionCookies = async (c: Context, session: Session) => {
+  await setSignedCookie(
+    c,
+    `${env.COOKIE_KEY}_ACCESS_TOKEN`,
+    session.access_token,
+    env.AUTH_SECRET,
+    {
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * env.COOKIE_EXPIRES),
+      sameSite: "None",
+      domain: env.COOKIE_DOMAIN,
+      secure: true,
+    }
+  );
 
-  const user = {
-    id: 1,
-  };
+  await setSignedCookie(
+    c,
+    `${env.COOKIE_KEY}_REFRESH_TOKEN`,
+    session.refresh_token,
+    env.AUTH_SECRET,
+    {
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * env.COOKIE_EXPIRES),
+      sameSite: "None",
+      domain: env.COOKIE_DOMAIN,
+      secure: true,
+    }
+  );
+};
 
-  if (strategy === "bearer") {
-    const token = await sign(user, env.AUTH_SECRET, "HS512");
+routes.post("/sign-in", zValidator("json", userSignInScheme), async (c) => {
+  const { email, password } = c.req.valid("json");
 
-    return c.json({
-      token,
-      strategy,
-      message: "Sign-in successful",
-    });
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) {
+    throw new HTTPException(401, { message: error.message });
   }
 
-  if (strategy === "cookie") {
-    await setSignedCookie(
-      c,
-      env.COOKIE_KEY,
-      btoa(JSON.stringify(user)),
-      env.AUTH_SECRET,
-      {
-        httpOnly: true,
-        expires: new Date(
-          Date.now() + 1000 * 60 * 60 * 24 * env.COOKIE_EXPIRES
-        ),
-        sameSite: "None",
-        domain: env.COOKIE_DOMAIN,
-        secure: true,
-      }
-    );
+  await setSessionCookies(c, data.session);
 
-    return c.json({
-      strategy,
-      message: "Sign-in successful",
-    });
+  return c.json({
+    message: "sign-in successful",
+  });
+});
+
+routes.post("/sign-up", zValidator("json", userSignUpScheme), async (c) => {
+  const { email, password } = c.req.valid("json");
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+  });
+
+  if (error) {
+    throw new HTTPException(401, { message: error.message });
   }
 
-  return c.json({ error: "Invalid strategy to sign-in" }, 400);
+  if (!data?.session) {
+    throw new HTTPException(401, { message: "No session" });
+  }
+
+  return c.json({
+    message: "sign-up successful",
+  });
 });
 
 routes.get("/me", authMiddleware(), (c) => {
@@ -62,10 +97,41 @@ routes.get("/me", authMiddleware(), (c) => {
   return c.json({ user });
 });
 
-routes.post("/sign-out", (c) => {
-  deleteCookie(c, env.COOKIE_KEY);
+routes.get("/refresh", async (c) => {
+  const refresh_token = await getSignedCookie(
+    c,
+    env.AUTH_SECRET,
+    `${env.COOKIE_KEY}_REFRESH_TOKEN`
+  );
 
-  return c.json({ message: "Sign-out successful" });
+  if (!refresh_token) {
+    throw new HTTPException(403, { message: "No refresh token" });
+  }
+
+  const { data, error } = await supabase.auth.refreshSession({
+    refresh_token,
+  });
+
+  if (error) {
+    throw new HTTPException(403, { message: error.message });
+  }
+
+  if (!data?.session) {
+    throw new HTTPException(403, { message: "No session" });
+  }
+
+  await setSessionCookies(c, data.session);
+
+  return c.newResponse(null, 200);
+});
+
+routes.post("/sign-out", authMiddleware(), async (c) => {
+  await supabase.auth.signOut();
+
+  deleteCookie(c, `${env.COOKIE_KEY}_ACCESS_TOKEN`);
+  deleteCookie(c, `${env.COOKIE_KEY}_REFRESH_TOKEN`);
+
+  return c.json({ message: "sign-out successful" });
 });
 
 export { routes, name };
