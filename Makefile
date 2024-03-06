@@ -1,18 +1,23 @@
-docker/build:
+release/build:
 	docker compose build
-docker/up:
+release/up:
 	docker compose up
-docker/down:
+release/down:
 	docker compose down
 
-dev/install:
+backend/install:
 	npm install
-dev/run:
+backend/run:
 	npm run dev
-dev/build:
+backend/build:
 	npm run build
 
 db/start:
 	npm run db/start
 db/stop:
 	npm run db/stop
+
+dev:
+	npm run db/start && \
+	npm run db/migrate && \
+	npm run dev
