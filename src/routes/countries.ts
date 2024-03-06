@@ -3,6 +3,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { supabase } from "../database";
 import { privateRoute } from "../middlewares";
+import { sendEvent } from "../events";
 
 const routes = new Hono<HonoVariables>();
 const name = "countries";
@@ -22,12 +23,15 @@ routes.post(
   privateRoute(),
   zValidator("json", countryCreationScheme),
   async (c) => {
+    const user = c.get("user");
     const { name } = c.req.valid("json");
 
     const { data: country } = await supabase
       .from("countries")
       .insert({ name })
       .select("*");
+
+    sendEvent(user.id, "message", country![0]);
 
     return c.json(country);
   }

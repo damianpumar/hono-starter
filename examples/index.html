@@ -19,8 +19,13 @@
       <button @click="getUser">Get User</button>
 
       <button @click="signOut">Sign Out</button>
+      <button @click="addRandomCountry">Add Country</button>
 
-      <p v-text="JSON.stringify(user)"></p>
+      <h2>User</h2>
+      <p v-text="JSON.stringify(user)" />
+
+      <h2>SSE</h2>
+      <p v-for="data in sseData" v-text="data" />
     </div>
 
     <script>
@@ -37,6 +42,26 @@
       createApp({
         setup() {
           const user = ref(null);
+          const sseData = ref([]);
+
+          const attachSSE = () => {
+            const eventSource = new EventSource(`http://localhost:3000/sse`, {
+              withCredentials: true,
+            });
+
+            eventSource.addEventListener("connected", (event) => {
+              console.log("Connected:", event.data);
+            });
+
+            eventSource.onmessage = (event) => {
+              console.log("Received message:", event.data);
+              sseData.value.push(event.data);
+            };
+
+            eventSource.onerror = (error) => {
+              eventSource.close();
+            };
+          };
 
           const signUp = async () => {
             const { data } = await axiosInstance.post("/auth/sign-up", {
@@ -60,6 +85,7 @@
             if (data.token) localStorage.setItem("token", data.token);
 
             await getUser();
+            attachSSE();
           };
 
           const getUser = async () => {
@@ -81,6 +107,20 @@
             user.value = null;
           };
 
+          const addRandomCountry = async () => {
+            const countries = [
+              "USA",
+              "UK",
+              "Germany",
+              "France",
+              "Italy",
+              "Spain",
+            ];
+            await axiosInstance.post("/countries", {
+              name: countries[Math.floor(Math.random() * countries.length)],
+            });
+          };
+
           return {
             user,
             signUp,
@@ -88,6 +128,8 @@
             getUser,
             signOut,
             refresh,
+            addRandomCountry,
+            sseData,
           };
         },
       }).mount("#app");

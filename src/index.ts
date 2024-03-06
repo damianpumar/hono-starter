@@ -2,7 +2,6 @@ import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 
 import { showRoutes } from "hono/dev";
-import { compress } from "hono/compress";
 
 import { corsMiddleware } from "./middlewares";
 import { routes } from "./routes";
@@ -10,7 +9,7 @@ import { env } from "./config";
 
 const app = new Hono<HonoVariables>();
 
-app.use(compress(), corsMiddleware());
+app.use(corsMiddleware());
 
 app.route(env.BASE_URL, routes);
 
