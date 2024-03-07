@@ -3,7 +3,7 @@ import { z } from "zod";
 import { zValidator } from "@hono/zod-validator";
 import { supabase } from "../database";
 import { privateRoute } from "../middlewares";
-import { sendEvent } from "../events";
+import { Event } from "../events";
 
 const routes = new Hono<HonoVariables>();
 const name = "countries";
@@ -31,7 +31,9 @@ routes.post(
       .insert({ name })
       .select("*");
 
-    sendEvent(user.id, "message", country![0]);
+    Event.send("sse/new:country", country![0], user.id);
+
+    Event.send("sse/new:country", country![0], "*");
 
     return c.json(country);
   }

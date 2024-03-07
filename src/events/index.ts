@@ -1,47 +1,74 @@
 import { SSEStreamingApi } from "hono/streaming";
+import { env } from "../config";
 
-interface Client {
-  userId: string;
+type Subscriber = {
+  subscriber: string;
   stream: SSEStreamingApi;
-}
+};
 
-const clients: Client[] = [];
+const subscribers: Subscriber[] = [];
 
-// await sendEvent(user.id, "message", {
-//   name: "John Doe",
-//   age: 30,
-// });
-export const sendEvent = async (
-  userId: string,
-  event: string,
-  data: unknown
-) => {
-  const client = clients.find((c) => c.userId === userId);
+function send(
+  event: EventTypes,
+  data: Object | Array<unknown>,
+  receiver: "*"
+): Promise<void>;
+function send(
+  event: EventTypes,
+  data: Object | Array<unknown>,
+  receiver: string
+): Promise<void>;
+async function send(event: any, data: any, receiver: any) {
+  const receivers = subscribers.filter(
+    (c) => receiver === "*" || c.subscriber === receiver
+  );
 
-  if (client) {
-    await client.stream.writeSSE({
+  if (!env.IS_PROD) {
+    console.log(
+      `🕊️ Sending event to ${receiver} with data: ${JSON.stringify(data)}`
+    );
+  }
+
+  const promises = receivers.map((receiver) =>
+    receiver.stream.writeSSE({
       id: Date.now().toString(),
       event,
       data: JSON.stringify(data),
-    });
+    })
+  );
+
+  await Promise.all(promises);
+}
+
+const subscribe = (subscriber: string, stream: SSEStreamingApi) => {
+  if (!env.IS_PROD) {
+    console.log(
+      `🌈 New subscriber ${subscriber} connected to the event stream`
+    );
   }
-};
 
-export const addClient = (userId: string, stream: SSEStreamingApi) => {
-  const existingClient = clients.find((c) => c.userId === userId);
-
-  if (existingClient) return;
-
-  clients.push({
-    userId,
+  subscribers.push({
+    subscriber: subscriber,
     stream,
   });
 };
 
-export const removeClient = (userId: string) => {
-  const index = clients.findIndex((c) => c.userId === userId);
+const remove = (subscriber: string) => {
+  const index = subscribers.findIndex((c) => c.subscriber === subscriber);
 
   if (index === -1) return;
 
-  clients.splice(index, 1);
+  if (!env.IS_PROD) {
+    console.log(
+      `💀 Subscriber ${subscriber} dis  connected from the event stream`
+    );
+  }
+
+  subscribers.splice(index, 1);
+};
+
+export const Event = {
+  send,
+  subscribe,
+  remove,
 };

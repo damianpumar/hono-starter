@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { SSEStreamingApi } from "hono/streaming";
-import { addClient, removeClient } from "../events";
+import { Event } from "../events";
 import { privateRoute } from "../middlewares";
 
 const routes = new Hono<HonoVariables>();
@@ -16,10 +16,10 @@ routes.get("/", privateRoute(), async (c) => {
   c.header("Cache-Control", "no-cache");
   c.header("Connection", "keep-alive");
 
-  addClient(user.id, stream);
+  Event.subscribe(user.id, stream);
 
   stream.onAbort(() => {
-    removeClient(user.id);
+    Event.remove(user.id);
   });
 
   await stream.writeSSE({

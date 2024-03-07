@@ -11,10 +11,20 @@ const app = new Hono<HonoVariables>();
 
 app.use(corsMiddleware());
 
+if (!env.IS_PROD) {
+  app.use("*", (c, next) => {
+    console.log(`🚏 Request to: ${c.req.url}`);
+
+    return next();
+  });
+}
+
 app.route(env.BASE_URL, routes);
 
 if (!env.IS_PROD) {
-  console.log(showRoutes(app));
+  console.log("🚦 Current Showing routes");
+
+  showRoutes(app);
 }
 
 console.log(`🛳️  Server is running on port: ${env.PORT}`);
