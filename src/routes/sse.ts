@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { SSEStreamingApi } from "hono/streaming";
+import { streamSSE } from "hono/streaming";
 import { Event } from "../events";
 import { privateRoute } from "../middlewares";
 
@@ -9,26 +9,19 @@ const name = "sse";
 routes.get("/", privateRoute(), async (c) => {
   const user = c.get("user");
 
-  const { readable, writable } = new TransformStream();
-  const stream = new SSEStreamingApi(writable, readable);
+  return streamSSE(c, async (stream) => {
+    Event.subscribe(user.id, stream);
 
-  c.header("Content-Type", "text/event-stream");
-  c.header("Cache-Control", "no-cache");
-  c.header("Connection", "keep-alive");
+    stream.onAbort(() => {
+      Event.remove(user.id);
+    });
 
-  Event.subscribe(user.id, stream);
-
-  stream.onAbort(() => {
-    Event.remove(user.id);
+    await stream.writeSSE({
+      id: Date.now().toString(),
+      event: "connected",
+      data: "Welcome!",
+    });
   });
-
-  await stream.writeSSE({
-    id: Date.now().toString(),
-    event: "connected",
-    data: "Welcome!",
-  });
-
-  return c.newResponse(stream.responseReadable);
 });
 
 export { routes, name };
