@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.8.2",
-    "@hono/zod-validator": "^0.1.11",
+    "@hono/zod-validator": "^0.8.0",
     "@supabase/supabase-js": "^2.39.7",
     "dotenv": "^16.4.5",
     "hono": "^4.1.1",
