@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.24",
-    "supabase": "^1.148.6",
+    "supabase": "^2.0.0",
     "tsx": "^3.12.2",
     "typescript": "^5.3.3"
   }
