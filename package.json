@@ -11,7 +11,7 @@
     "db/generate/types": "supabase gen types typescript --local > src/database/supabase.types.ts"
   },
   "dependencies": {
-    "@hono/node-server": "^1.8.2",
+    "@hono/node-server": "^2.0.0",
     "@hono/zod-validator": "^0.1.11",
     "@supabase/supabase-js": "^2.39.7",
     "dotenv": "^16.4.5",
